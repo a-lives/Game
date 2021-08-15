@@ -7,7 +7,7 @@ import _thread
 from queue import Queue
 from random import choice
 
-DEBUG = True
+DEBUG = False
 
 
 FRESH_ITER = 0.01
