@@ -12,7 +12,7 @@ DEBUG = False
 
 FRESH_ITER = 0.01
 
-SNAKE_SPEED = 10                                                    #每秒一格
+SNAKE_SPEED = 10                                                    #每秒多少格
 SNAKE_START_LONG = 5
 SNAKE_WIDTH = 30
 
