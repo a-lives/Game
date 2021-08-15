@@ -7,7 +7,7 @@ import _thread
 from queue import Queue
 from random import choice
 
-DEBUG = False
+DEBUG = True
 
 
 FRESH_ITER = 0.01
@@ -46,6 +46,8 @@ def check_gp(p):
     if p[0]>=GRID_SIZE[0] or p[0]<0 or p[1]>=GRID_SIZE[1] or p[1]<0:
         GAME_CONTNIUE = False
         print("GAMEOVER,you out of the side")
+        return True
+    return False
         
 def call_error():
     if GAME_CONTNIUE:
@@ -97,7 +99,8 @@ class Board:
         #添头去尾
         head = self.snake.body.queue[-1]
         head_pos = [head.position[0]+head.nd[0], head.position[1]+head.nd[1]]
-        check_gp(head_pos)
+        if check_gp(head_pos):
+            return
         self.snake.body.put(Body(
             ld=[-head.nd[0],-head.nd[1]],
             nd=head.nd,
@@ -224,7 +227,6 @@ class Snake:
         self.body.queue.appendleft(newbody)
         
     def draw(self):
-        
         def draw_side(p,drection):
             if drection==R:    
                 start_h = p[0]      * SPACE_H +SIDE_H
@@ -250,7 +252,6 @@ class Snake:
                 print("ERROR")
             self.parent.scene[start_h:end_h,start_w:end_w,:] = np.uint8(255)
 
-        
         for b in self.body.queue:
             if not b.show:
                 continue
@@ -271,8 +272,8 @@ class Snake:
                 draw_side(p,b.ld)
             if not b.head or k:
                 if b.head_draw:
-                    draw_side(p,b.nd)
-                
+                    draw_side(p,b.nd) 
+        
         #draw anime
         #head anime
         if HEAD_D==R:    
