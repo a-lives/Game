@@ -251,29 +251,33 @@ class Snake:
             else:
                 print("ERROR")
             self.parent.scene[start_h:end_h,start_w:end_w,:] = np.uint8(255)
-
-        for b in self.body.queue:
-            if not b.show:
-                continue
-            p = b.position
-            
-            #绘制中心方块
-            start_h = p[0]      * SPACE_H +SIDE_H
-            end_h   = (p[0]+1)  * SPACE_H -SIDE_H
-            start_w = p[1]      * SPACE_W +SIDE_W
-            end_w   = (p[1]+1)  * SPACE_W -SIDE_W
-            self.parent.scene[start_h:end_h,start_w:end_w,:] = np.uint8(255)
-            
-            #绘制连接边缘
-            
-            k = False
-            
-            if not b.hail or k:
-                draw_side(p,b.ld)
-            if not b.head or k:
-                if b.head_draw:
-                    draw_side(p,b.nd) 
-        
+        def show():
+            try:
+                for b in self.body.queue:
+                    if not b.show:
+                        continue
+                    p = b.position
+                    
+                    #绘制中心方块
+                    start_h = p[0]      * SPACE_H +SIDE_H
+                    end_h   = (p[0]+1)  * SPACE_H -SIDE_H
+                    start_w = p[1]      * SPACE_W +SIDE_W
+                    end_w   = (p[1]+1)  * SPACE_W -SIDE_W
+                    self.parent.scene[start_h:end_h,start_w:end_w,:] = np.uint8(255)
+                    
+                    #绘制连接边缘
+                    
+                    k = False
+                    
+                    if not b.hail or k:
+                        draw_side(p,b.ld)
+                    if not b.head or k:
+                        if b.head_draw:
+                            draw_side(p,b.nd) 
+            except:
+                print("LOCKED")
+                show()
+        show()
         #draw anime
         #head anime
         if HEAD_D==R:    
