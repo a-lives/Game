@@ -34,10 +34,4 @@ def getscore():
         return int(f.read())
 
 if __name__ == "__main__":
-    # board_img = getimg(BOARD_POS)
-    while 1:
-        time.sleep(1)
-        try:
-            print("\r%d" % (getscore(),),end="")
-        except:
-            pass
+    board_img = getimg(BOARD_POS)
