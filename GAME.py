@@ -1,5 +1,5 @@
 from PyQt5 import QtCore,QtGui
-from PyQt5.QtWidgets import QWidget,QApplication,QLabel
+from PyQt5.QtWidgets import QFrame, QWidget,QApplication,QLabel
 import numpy as np
 import time
 import sys
@@ -79,6 +79,11 @@ class Board:
 
     def eat_apple(self):
         self.score += self.apple.value                           #计分
+        try:
+            with open("SCORE.txt",'w+') as f:
+                f.write(str(self.score))
+        except:
+            pass
         self.snake.lengthen()
         self.add_apple()
         
@@ -127,7 +132,7 @@ class Board:
         self.snake.body.queue[-1].show = False      #尾部不显示，显示动画
         self.move_anime()                           #动画播放
         self.snake.body.queue[-1].show = True       #动画播完了，可以显示头了
-        self.snake.body.queue[-2].head_draw = True #画头
+        self.snake.body.queue[-2].head_draw = True  #画头
         self.snake.body.get()                       #旧尾巴可以去掉了
                 
         # time.sleep(1/SNAKE_SPEED)
@@ -369,11 +374,13 @@ class MainWindow(QWidget):
         self.score_box = QLabel(self)
         self.score_box.setGeometry(BOARD_SIZE[1],0,100,100)
         self.score_box.setStyleSheet(""" 
-                                     background: #3498db;
+                                     background: black;
                                      color: red;
-                                     font-size: 24px;
+                                     font-size: 36px;
                                      font-family: Arial;
                                      """)
+        self.score_box.setFrameShape(QFrame.Box)
+        self.score_box.setFrameStyle(3)
         self.score_box.setAlignment(QtCore.Qt.AlignCenter)
         self.score_box.show()
 
