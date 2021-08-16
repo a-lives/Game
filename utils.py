@@ -4,9 +4,9 @@ from PIL import ImageGrab
 import time
 
 BOARD_POS = [40, 13, 861, 866]
-SCORE_POS = [860, 60, 943, 141]
+# SCORE_POS = [860, 60, 943, 141]
 
-def getimg(position=None) -> np.ndarray: 
+def getimg(position=BOARD_POS) -> np.ndarray: 
     """ 
     position : tuple | list , (*top_left,*button_right) , 4 params
     
@@ -26,12 +26,12 @@ def preprocess(imgmat:np.ndarray,toshape=(900,900)) -> np.ndarray:
     return mat
 
 def totensor(imgmat):
-    tensor = torch.tensor(imgmat.transpose(2,0,1))
+    tensor = torch.tensor(imgmat.transpose(2,0,1)).float()
     return tensor
 
 def getscore():
     with open("SCORE.txt",'r') as f:
-        return int(f.read())
+        return torch.tensor(int(f.read())).float()
 
 if __name__ == "__main__":
     board_img = getimg(BOARD_POS)
