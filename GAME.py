@@ -12,7 +12,7 @@ DEBUG = False
 
 FRESH_ITER = 0.01
 
-SNAKE_SPEED = 10                                                    #每秒多少格
+SNAKE_SPEED = 5                                                    #每秒多少格
 SNAKE_START_LONG = 5
 SNAKE_WIDTH = 30
 
@@ -45,12 +45,16 @@ def check_gp(p):
     global GAME_CONTNIUE
     if p[0]>=GRID_SIZE[0] or p[0]<0 or p[1]>=GRID_SIZE[1] or p[1]<0:
         GAME_CONTNIUE = False
+        with open("GAME_STATE.txt","w+") as f:
+            f.write("2")
         print("GAMEOVER,you out of the side")
         return True
     return False
         
 def call_error():
     if GAME_CONTNIUE:
+        with open("GAME_STATE.txt","w+") as f:
+            f.write("2")
         print("ERROR")
 
 class Board:
@@ -115,6 +119,8 @@ class Board:
         self.snake.body.queue[0].show = False       #新头先不显示，展示动画
         if self.grid[head_pos[0]][head_pos[1]] == 1:
             GAME_CONTNIUE = False
+            with open("GAME_STATE.txt","w+") as f:
+                f.write("2")
             print("GAME OVER : You eat yourself!")
         if self.grid[head_pos[0]][head_pos[1]] == 2:
             print("EAT APPLE!")
@@ -177,7 +183,7 @@ class Apple:
         self.size = APPLE_SIZE
         self.parent = parent
         self.position = position
-        self.value = 1
+        self.value = 10
     def draw(self):
         p = self.position
         start_h = p[0]      * SPACE_H
@@ -352,6 +358,8 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow,self).__init__()
         self.board = Board()
+        with open("GAME_STATE.txt","w+") as f:
+            f.write("0")
         self.initUI()
         
     def initUI(self):
@@ -430,9 +438,13 @@ class MainWindow(QWidget):
         elif str(a0.key()) == "32":
             if GAME_CONTNIUE:
                 print("GAME START")
+                with open("GAME_STATE.txt","w+") as f:
+                    f.write("1")
                 self.refresh()
             else:
                 print("RESHART")
+                with open("GAME_STATE.txt","w+") as f:
+                    f.write("1")
                 GAME_CONTNIUE = True
                 self.board = Board()
                 self.refresh()

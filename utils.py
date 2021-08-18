@@ -2,6 +2,9 @@ import numpy as np
 import torch
 from PIL import ImageGrab
 import time
+import matplotlib.pyplot as plt
+import os
+import re
 
 BOARD_POS = [40, 13, 861, 866]
 # SCORE_POS = [860, 60, 943, 141]
@@ -32,6 +35,38 @@ def totensor(imgmat):
 def getscore():
     with open("SCORE.txt",'r') as f:
         return torch.tensor(int(f.read())).float()
+    
+def get_game_state():
+    """ 
+    加载游戏状态
+    0:未开始
+    1:进行中
+    2:已结束
+    """
+    with open("GAME_STATE.txt",'r') as f:
+        return int(f.read())
+
+def get_game_pid() -> str:
+    res = os.popen("cut.bat")
+    pid = re.findall(r"\d+",res.read())[0]
+    return pid
+
+def cut_game(pid = None):
+    if pid != None:
+        os.system("pssuspend %s" % (pid,))
+    else:
+        pid = get_game_pid()
+        os.system("pssuspend %s" % (pid,))
+    
+def con_game(pid = None):
+    if pid != None:
+        os.system("pssuspend -r %s" % (pid,))
+    else:
+        pid = get_game_pid()
+        os.system("pssuspend -r %s" % (pid,))
 
 if __name__ == "__main__":
-    board_img = getimg(BOARD_POS)
+    # board_img = getimg(BOARD_POS)
+    # plt.imshow(board_img)
+    # plt.show()
+    cut_game()
