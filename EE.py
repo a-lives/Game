@@ -41,7 +41,7 @@ START_POSITIONS = [ [8,3+i] for i in range(SNAKE_START_LONG)]
 START_DRECTIONS = [(L,R)]*SNAKE_START_LONG
 
 FIRSTGAME = True
-GAME_CONTNIUE = True
+GAME_CONTNIUE = False
 TURN_LOCK = True                                                  #转向锁，防止出现奇奇怪怪的BUG
 
 #anime super param
@@ -53,8 +53,20 @@ APPLE_GET = False
 APPLE_TIME = 0
 
 NEW_RECORD = False
+GET_NEW_RECORD = True
 
 BOARD = None
+SHP = None
+TORECORD = True
+RECORDING = False
+RECORD = []
+
+AISAFE = False
+REWARD = {
+    "EA":5,
+    "N":0.01,
+    "G.O.":0
+}
 
 def check_gp(p):
     if p[0]>=GRID_SIZE[0] or p[0]<0 or p[1]>=GRID_SIZE[1] or p[1]<0:
@@ -93,9 +105,14 @@ class Board:
         self.scene[start_h:end_h,start_w:end_w,:] = np.uint8(255)
 
     def eat_apple(self):
+        global RECORD
         self.score += self.apple.value                           #计分
         self.snake.lengthen()
         self.add_apple()
+        if TORECORD:
+            self.parent.nt = time.time()
+            RECORD.append([self.parent.nt-self.parent.st,BOARD,SHP,3,REWARD["EA"]])
+            self.parent.lt = self.parent.nt
         
     
     def add_snake(self):
@@ -108,12 +125,13 @@ class Board:
         self.apple.draw()
     
     def snake_move(self):
-        global GAME_CONTNIUE,TURN_LOCK,APPLE_GET,APPLE_TIME
+        global GAME_CONTNIUE,TURN_LOCK,APPLE_GET,APPLE_TIME,SHP
         TURN_LOCK = False
         
         #添头去尾
         head = self.snake.body.queue[-1]
         head_pos = [head.position[0]+head.nd[0], head.position[1]+head.nd[1]]
+        SHP = head_pos
         if APPLE_GET:
             if APPLE_TIME < 5:
                 APPLE_TIME = APPLE_TIME + 1
@@ -373,6 +391,9 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow,self).__init__()
         self.board = Board(self)
+        self.st = 0
+        self.lt = 0
+        self.nt = 0
         self.initUI()
         
     def initUI(self):
@@ -381,7 +402,7 @@ class MainWindow(QWidget):
         self.setStyleSheet(""" 
                            background: #7f8c8d;
                            """)
-        self.setWindowTitle("Real-Python")
+        self.setWindowTitle("Greedy Python")
         self.show()
         
         #放置游戏界面
@@ -444,7 +465,9 @@ class MainWindow(QWidget):
     def refresh(self):
 
         def dothis():
-            global GAME_CONTNIUE,NEW_RECORD,BOARD
+            global GAME_CONTNIUE,NEW_RECORD,BOARD,SHP,RECORD
+            RECORD = []
+            self.st = time.time()
             while GAME_CONTNIUE:
                 if DEBUG:
                     self.board.board_refresh()
@@ -463,8 +486,23 @@ class MainWindow(QWidget):
                 #计分
                 self.score_box.setText(str(self.board.score))
                 
+                #记录
+                # if TORECORD and (self.nt - self.lt > 0.3):
+                #     self.nt = time.time()
+                #     RECORD.append([self.nt-self.st,BOARD,SHP,0,0])
+                #     self.lt = self.nt
+                    
+                if AISAFE and self.nt-self.st>60:
+                    print("Timeout!!!")
+                    GAME_CONTNIUE = False
+                
                 time.sleep(FRESH_ITER)
-            if self.board.score > self.getTopList()[-1][1]:
+            if TORECORD:
+                self.nt = time.time()
+                RECORD.append([self.nt-self.st,BOARD,SHP,4,REWARD["G.O."]])
+                print("持续时间:",self.nt-self.st)
+            
+            if self.board.score > self.getTopList()[-1][1] and GET_NEW_RECORD:
                 self.lab2.setText("Congratulation!Press space bar to continue and leave you record")
                 NEW_RECORD = True
                     
@@ -476,7 +514,7 @@ class MainWindow(QWidget):
 
     
     def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
-        global GAME_CONTNIUE,FIRSTGAME,NEW_RECORD
+        global GAME_CONTNIUE,FIRSTGAME,NEW_RECORD,BOARD,SHP,RECORD
         """ 
         ↑   :   16777235
         ↓   :   16777237
@@ -487,14 +525,24 @@ class MainWindow(QWidget):
             for b in self.board.snake.body.queue:
                 if b.head == True:
                     b.nd = turn_right(b.nd)
+                if TORECORD:
+                    self.nt = time.time()
+                    RECORD.append([self.nt-self.st,BOARD,SHP,2,REWARD["N"]])
+                    self.lt = self.nt  
         elif str(a0.key()) == "16777234" and TURN_LOCK:
             for b in self.board.snake.body.queue:
                 if b.head == True:
                     b.nd = turn_left(b.nd)
+                if TORECORD:
+                    self.nt = time.time()
+                    RECORD.append([self.nt-self.st,BOARD,SHP,1,REWARD["N"]])
+                    self.lt = self.nt
         elif str(a0.key()) == "32":
             if NEW_RECORD:
                 self.addRecord(self.board.score)
                 NEW_RECORD=False
+            elif RECORDING:
+                self.lab2SetText("Recording...Please wait a moment")
             elif FIRSTGAME:
                 print("GAME START")
                 self.lab2SetText("GAME START")
