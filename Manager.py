@@ -35,7 +35,8 @@ try:
     otter.load_state_dict(torch.load("./params/long_term/otter.pkl"))
     print("load success")
 except:
-    pass
+    target.load_state_dict(otter.state_dict().copy())
+    print("new model")
 torch.save(target.state_dict(),"./params/temp/target.pkl")
 torch.save(otter.state_dict(),"./params/temp/otter.pkl")
 optimizer = torch.optim.Adam(otter.parameters(),LR,betas=(0,0.9))
@@ -62,6 +63,7 @@ def dataprocess():
                 exp_pool["s1_"].append(torch.from_numpy(re[1].transpose(2,1,0)).float().cuda())
                 exp_pool["s2_"].append(torch.tensor([re[2]]).cuda())
                 exp_pool["counter"] += 1
+                # print(re[-2],end="")
             except:
                 print("dataprocess error")
     print("dataprocess sucess","counter=",exp_pool["counter"])
@@ -117,7 +119,7 @@ def operator():
                 #operate
                 action_ = torch.argmax(values).item()
                 rn = np.random.rand()
-                if rn<=EPS or count2 < 4:
+                if rn<=EPS or count2 < 5:
                     action = random.choice([0,1,2])
                     count2 += 1
                 else:
@@ -125,7 +127,7 @@ def operator():
                 
                 print("\r",end-start,action_,action,values.data,end="       ")
                 if action == 0:
-                    pass
+                    EE.RECORD.append([None,EE.BOARD,EE.SHP,0,EE.REWARD["N"]])
                 elif action == 1:
                     win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_LEFT, 0)
                     win32api.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_LEFT, 0)

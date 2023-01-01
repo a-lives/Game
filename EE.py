@@ -63,9 +63,9 @@ RECORD = []
 
 AISAFE = False
 REWARD = {
-    "EA":5,
+    "EA":2,
     "N":0.01,
-    "G.O.":0
+    "G.O.":-1
 }
 
 def check_gp(p):
