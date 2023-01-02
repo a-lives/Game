@@ -64,7 +64,7 @@ RECORD = []
 AISAFE = False
 REWARD = {
     "EA":2,
-    "N":0.01,
+    "N":0.005,
     "G.O.":-1
 }
 

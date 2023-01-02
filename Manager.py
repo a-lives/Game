@@ -13,7 +13,7 @@ gc.isenabled()
 starttime = time.time()
 
 EE.AISAFE = True
-GAMMA = 0.95
+GAMMA = 0.9
 LR = 1e-4
 EPS= 0.1
 exp_pool = {
