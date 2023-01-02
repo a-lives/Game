@@ -10,7 +10,7 @@ def kill(x,y):
 fail = []
 
 st = time.time()
-for i in range(20):
+for i in range(10):
     p = sp.Popen("python Manager.py")
     timer = Timer(400,kill,[p,i])
     timer.start()

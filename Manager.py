@@ -13,16 +13,15 @@ gc.isenabled()
 starttime = time.time()
 
 EE.AISAFE = True
+EE.TORECORD = True
 GAMMA = 0.9
 LR = 1e-4
 EPS= 0.1
 exp_pool = {
     "counter":0,
-    "s1":[],
-    "s2":[],
+    "s":[],
     "r":[],
-    "s1_":[],
-    "s2_":[]
+    "s_":[],
 }
 
 
@@ -47,7 +46,7 @@ def game():
     app.exit(app.exec_())
 
 def dataprocess():
-    #RECORD: (t,s1,s2,a,r)
+    #RECORD: (t,s,a,r)
     for i,re in enumerate(EE.RECORD):
         if re[-2] >2 or np.random.rand() <= 0.2:
             try:
@@ -57,26 +56,25 @@ def dataprocess():
                     continue
                 else:
                     r[EE.RECORD[i-1][-2]] = re[-1]
-                exp_pool["s1"].append(torch.from_numpy(EE.RECORD[i-1][1].transpose(2,1,0)).float().cuda())
-                exp_pool["s2"].append(torch.tensor([EE.RECORD[i-1][2]]).cuda())
+                s = np.concatenate(EE.RECORD[i-1][1],axis=2)
+                s_ = np.concatenate(re[1],axis=2)
+                # print(s.shape,s_.shape)
+                exp_pool["s"].append(torch.from_numpy(s.transpose(2,1,0)).float().cuda())
                 exp_pool["r"].append(torch.tensor(r).cuda())
-                exp_pool["s1_"].append(torch.from_numpy(re[1].transpose(2,1,0)).float().cuda())
-                exp_pool["s2_"].append(torch.tensor([re[2]]).cuda())
+                exp_pool["s_"].append(torch.from_numpy(s_.transpose(2,1,0)).float().cuda())
                 exp_pool["counter"] += 1
                 # print(re[-2],end="")
             except:
                 print("dataprocess error")
     print("dataprocess sucess","counter=",exp_pool["counter"])
 
-def train(batch_size=64):
+def train(batch_size=16):
     #(s,r',a,s')
-    exp_pool["s1"] = torch.stack(exp_pool["s1"]).split(batch_size,dim=0)
-    exp_pool["s2"] = torch.stack(exp_pool["s2"]).split(batch_size,dim=0)
+    exp_pool["s"] = torch.stack(exp_pool["s"]).split(batch_size,dim=0)
     exp_pool["r"] = torch.stack(exp_pool["r"]).split(batch_size,dim=0)
-    exp_pool["s1_"] = torch.stack(exp_pool["s1_"]).split(batch_size,dim=0)
-    exp_pool["s2_"] = torch.stack(exp_pool["s2_"]).split(batch_size,dim=0)
-    for s1,s2,r,s1_,s2_ in zip(exp_pool["s1"],exp_pool["s2"],exp_pool["r"],exp_pool["s1_"],exp_pool["s2_"]):
-        loss = torch.nn.functional.mse_loss(r+GAMMA*target(s1_,s2_),otter(s1,s2))
+    exp_pool["s_"] = torch.stack(exp_pool["s_"]).split(batch_size,dim=0)
+    for s,r,s_ in zip(exp_pool["s"],exp_pool["r"],exp_pool["s_"]):
+        loss = torch.nn.functional.mse_loss(r+GAMMA*target(s_),otter(s))
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -94,7 +92,7 @@ def operator():
         except:
             pass
     count = 1
-    while exp_pool["counter"]<256:
+    while exp_pool["counter"]<128:
         time.sleep(3)
         #start game
         
@@ -110,10 +108,13 @@ def operator():
                 break
             if (EE.GAME_CONTNIUE):
                 start = time.time()
-                b,p = dataload(EE.BOARD,EE.SHP)
+                while 1:
+                    board = EE.BOARD
+                    if board.full():
+                        break
+                b = dataload(board)
                 b = b.cuda()
-                p = p.cuda()
-                values = otter(b,p)
+                values = otter(b)
                 end = time.time()
                 
                 #operate
@@ -127,7 +128,7 @@ def operator():
                 
                 print("\r",end-start,action_,action,values.data,end="       ")
                 if action == 0:
-                    EE.RECORD.append([None,EE.BOARD,EE.SHP,0,EE.REWARD["N"]])
+                    EE.RECORD.append([None,board.queue,0,EE.REWARD["N"]])
                 elif action == 1:
                     win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_LEFT, 0)
                     win32api.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_LEFT, 0)
@@ -136,7 +137,7 @@ def operator():
                     win32api.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_RIGHT, 0)
             else:
                 break
-            time.sleep(0.2)
+            time.sleep(0.17)
         if not td1.is_alive():
             break
         dataprocess()

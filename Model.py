@@ -1,16 +1,18 @@
 import torch
 from torch.nn.modules import Linear,Conv2d,LeakyReLU,Flatten
+from queue import Queue
 import numpy as np
 
 
-def dataload(scene,pos):
-    return torch.stack([torch.from_numpy(scene.transpose(2,1,0)).float()]),torch.stack([torch.tensor(pos)])
+def dataload(scene:Queue):
+    scene = np.concatenate(scene.queue,axis=2)
+    return torch.stack([torch.from_numpy(scene.transpose(2,1,0)).float()])
 
 
 class Otter(torch.nn.Module):
     def __init__(self):
         super(Otter,self).__init__()
-        self.conv1 = self.block(2,16)               #(1,480,480) --> (16,240,240)
+        self.conv1 = self.block(4,16)               #(1,480,480) --> (16,240,240)
         self.conv2 = self.block(16,32)              #(16,240,240) --> (32,120,120)
         self.conv3 = self.block(32,64)              #(32,120,120) --> (64,60,60)
         self.linear = torch.nn.Sequential(
@@ -25,12 +27,7 @@ class Otter(torch.nn.Module):
         )
         return block
         
-    def forward(self,x,pos:torch.Tensor):
-        pos= pos.unsqueeze(1)
-        pos= pos.repeat(1,1,x.size(2),int(x.size(2)/2))
-        # print(x.shape,pos.shape)
-        x = torch.cat(tensors=(x,pos),dim=1)
-        # print(x.shape)
+    def forward(self,x):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
